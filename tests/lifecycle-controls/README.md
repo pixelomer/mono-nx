@@ -39,3 +39,16 @@ application mode. The first logger call overwrites
 sdmc:/switch/mono-llvm-lifecycle-controls.txt; later calls append.
 Preserve any existing log first and inspect all failure records and the final
 summary. No deployment or system configuration is performed by the build helper.
+
+## Plain native pthread control
+
+The native logger runs a control when the managed BEGIN message arrives,
+before the managed phases. It creates eight joinable pthreads per round across
+48 rounds using the same libc/libnx implementation, without attaching those
+callbacks to Mono. Every successfully created handle has one join owner.
+The callbacks return their argument, and the control checks both join status
+and returned identity, flushing each round's record to the same log.
+
+These callbacks do not exercise formatting, TLS destructor edge cases or
+arbitrary native libraries. Native counters alone do not prove allocation
+ownership or justify adding another reaper to Mono's managed join path.
