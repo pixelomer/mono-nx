@@ -6,7 +6,7 @@ The public source baselines are mono-nx
 fec057748af9121d5cf363e772e817908d57c191 (rel-3) and exelix11/dotnet_runtime
 d75fa786b88e10f45ca9263773d84e47033cfb01 (.NET 9.0.3).
 
-The [runtime LLVM changes](https://github.com/pixelomer/dotnet-runtime/commit/b345af6783edadce4efcd8130f402b68e3d94648)
+The [LLVM-capable runtime source](https://github.com/pixelomer/dotnet-runtime/commit/a1b7b55d04454d003645f01972fffcccfdbb8b88)
 supply three required contracts:
 
 - MonoEnableLLVMRuntime enables target support for LLVM AOT modules without
@@ -27,7 +27,7 @@ runtime and build ICU using the included public-source recipe:
 
 ```sh
 git clone https://github.com/pixelomer/dotnet-runtime.git dotnet_runtime
-git -C dotnet_runtime checkout --detach b345af6783edadce4efcd8130f402b68e3d94648
+git -C dotnet_runtime checkout --detach a1b7b55d04454d003645f01972fffcccfdbb8b88
 source env.sh
 (cd icu && bash build_icu.sh)
 bash build_llvm.sh

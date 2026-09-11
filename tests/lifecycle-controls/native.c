@@ -5,6 +5,9 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <string.h>
+#ifdef MONO_ALLOC_OWNER_TRACE
+void lifecycle_allocation_snapshot(FILE* file);
+#endif
 
 unsigned long long lifecycle_native_used(void)
 {
@@ -49,5 +52,10 @@ void lifecycle_log(const char* text)
     first = 0;
     fprintf(file, "%s\n", text);
     if (strncmp(text, "BEGIN ", 6) == 0) native_thread_control(file);
+#ifdef MONO_ALLOC_OWNER_TRACE
+    if (strncmp(text, "BEGIN ", 6) == 0 || strstr(text, " round=0 ") ||
+        strstr(text, " round=47 ") || strncmp(text, "PASS ", 5) == 0)
+        lifecycle_allocation_snapshot(file);
+#endif
     fclose(file);
 }
