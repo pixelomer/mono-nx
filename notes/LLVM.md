@@ -103,3 +103,14 @@ Use the pinned package's libclang and the restricted mono.aotcross subset.
 A host toolchain or package-source problem is not a reason to change target
 package versions or the system crypto policy. Object generation alone does not
 establish managed exception, GC or thread correctness.
+
+## Native thread ownership
+
+Mono managed threads use joinable pthreads. Thread.Join waits through
+mono_thread_join, and runtime threads also participate in a joinable-thread
+registry. Normal managed-thread exit can call pthread_exit.
+A second reaper on this path would duplicate native lifetime ownership.
+
+SystemNative_CreateThread is a separate native BCL callback contract requesting
+detached pthreads without retaining a join handle. Do not assume it shares
+Mono's joinable-thread rules or that a callback always returns normally.
