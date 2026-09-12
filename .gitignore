@@ -28,3 +28,6 @@ native/aot/source/mono_symbols.h
 
 __pycache__/
 *.pyc
+
+# Generated notices assembled with the SD payload.
+/sd_files/mono/licenses/
