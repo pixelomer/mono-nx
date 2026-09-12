@@ -5,16 +5,19 @@ selected runtime's src/mono/mono/utils/mono-tls.c and compiles that block
 against a small libnx TLS shim. It models libnx clearing the physical slot
 before one destructor invocation.
 
-Use Python 3, a C11 host compiler named cc, Bash and a source checkout of the
-[TLS-capable runtime](https://github.com/pixelomer/dotnet-runtime/commit/a1b7b55d04454d003645f01972fffcccfdbb8b88).
-No target runtime binary or console is needed. For a dedicated source checkout,
-from this repository root:
+Use Python 3.12+, a C11 compiler named cc, Bash and the source runtime pinned by
+[runtime.lock.json](../../runtime.lock.json). No target binary or console is
+needed. From this repository root:
 
 ```sh
-git clone https://github.com/pixelomer/dotnet-runtime.git artifacts/tls-runtime
-git -C artifacts/tls-runtime checkout --detach a1b7b55d04454d003645f01972fffcccfdbb8b88
-MONO_LLVM_RUNTIME_ROOT="$(pwd)/artifacts/tls-runtime" bash tests/tls-cleanup/run.sh
+python3 build.py --fetch-only
+bash tests/tls-cleanup/run.sh
 ```
+
+The runner defaults to MONO_NX_ROOT when set, otherwise this checkout's
+dotnet_runtime directory. MONO_LLVM_RUNTIME_ROOT can explicitly select another
+compatible source checkout. Do not use a packaged SDK here: the harness needs
+the original mono-tls.c source, not only headers and archives.
 
 The harness checks container reclamation, allocation-free null reads/writes,
 callback values, bounded callback repetition and exclusion of freed keys.

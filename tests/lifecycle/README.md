@@ -6,17 +6,16 @@ It does not establish completeness of the runtime or every SDK configuration.
 
 ## Build inputs
 
-Follow the [LLVM source-build guide](../../notes/LLVM.md) to build the
-LLVM runtime/compiler and the separate public rel-3 CoreLib/framework,
-Mono.Linker, ICU and native BCL inputs. The legacy helper expects the guide's
-Debug SDK layout and a Release LLVM runtime. It also needs a .NET 9-compatible
-SDK on PATH, Python, ripgrep and the devkitPro toolchain.
+Follow the [root build guide](../../README.md#build) for source inputs and
+host/toolchain prerequisites. The helper uses the checkout's matching Release
+runtime, framework, IL linker and LLVM compiler. It also needs Python,
+ripgrep and a .NET 9 SDK on PATH.
 
-From the repository root, after those source builds:
+From the repository root:
 
 ```sh
-MONO_SDK_ROOT="$(pwd)/artifacts/rel3-sdk" \
-MONO_LLVM_RUNTIME_ROOT="$(pwd)/dotnet_runtime" \
+python3 build.py
+source env.sh
 bash tests/lifecycle/build.sh
 ```
 

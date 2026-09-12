@@ -2,9 +2,10 @@
 
 # This script collects the files needed to build the interpreter and AOT binaries without having to manually build mono
 # Paths are chosen empirically from build scripts and may break at any time
-# Also i don't think this will work across dkp toolchain updates so you should use the pinned version in the dockerfile and hope for the best
+# Keep the toolchain and runtime revisions recorded by the source build together.
 
 set -euo pipefail
+CONFIGURATION=${CONFIGURATION:-Release}
 
 ROOT_DIR=$(realpath .)
 SDK_STAGE="$ROOT_DIR/sdk_build"
@@ -97,14 +98,14 @@ ICU_INCLUDE_DIR="$ICU_NX_INSTALL_DIR/include"
 ICU_LIB_DIR="$ICU_NX_INSTALL_DIR/lib"
 ICU_DATA_FILE="$ICU_NX_INSTALL_DIR/share/icu/77.1/icudt77l.dat"
 
-MONO_DLL_DIR="$MONO_NX_ROOT/artifacts/bin/mono/libnx.arm64.Debug"
+MONO_DLL_DIR="$MONO_NX_ROOT/artifacts/bin/mono/libnx.arm64.${CONFIGURATION}"
 MONO_INCLUDE_DIR="$MONO_DLL_DIR/include/mono-2.0"
-RUNTIME_DLL_DIR="$MONO_NX_ROOT/artifacts/bin/runtime/net9.0-libnx-Debug-arm64"
-NATIVE_LIB_DIR="$MONO_NX_ROOT/artifacts/bin/native/net9.0-libnx-Debug-arm64"
-MONO_LIB_DIR="$MONO_NX_ROOT/artifacts/obj/mono/libnx.arm64.Debug/out/lib"
-ZLIB_DIR="$MONO_NX_ROOT/artifacts/obj/mono/libnx.arm64.Debug/_deps/fetchzlibng-build"
-LINKER_DIR="$MONO_NX_ROOT/artifacts/bin/Mono.Linker/Debug/net9.0"
-AOT_CROSS_DIR="$MONO_NX_ROOT/artifacts/bin/mono/linux.x64.Debug/cross/linux-x64/libnx-arm64"
+RUNTIME_DLL_DIR="$MONO_NX_ROOT/artifacts/bin/runtime/net9.0-libnx-${CONFIGURATION}-arm64"
+NATIVE_LIB_DIR="$MONO_NX_ROOT/artifacts/bin/native/net9.0-libnx-${CONFIGURATION}-arm64"
+MONO_LIB_DIR="$MONO_NX_ROOT/artifacts/obj/mono/libnx.arm64.${CONFIGURATION}/out/lib"
+ZLIB_DIR="$MONO_NX_ROOT/artifacts/obj/mono/libnx.arm64.${CONFIGURATION}/_deps/fetchzlibng-build"
+LINKER_DIR="$MONO_NX_ROOT/artifacts/bin/Mono.Linker/${CONFIGURATION}/net9.0"
+AOT_CROSS_DIR="$MONO_NX_ROOT/artifacts/bin/mono/linux.x64.${CONFIGURATION}/cross/linux-x64/libnx-arm64"
 ILLINK_DIR="$MONO_NX_ROOT/src/mono/System.Private.CoreLib/src/ILLink"
 
 ILLINK_FILES=(
@@ -122,26 +123,29 @@ copy_dir "$ICU_INCLUDE_DIR" "$SDK_STAGE/icu/libnx/include"
 copy_static_libs "$ICU_LIB_DIR" "$SDK_STAGE/icu/libnx/lib"
 
 copy_file "$ICU_DATA_FILE" "$SDK_STAGE/icu/libnx/share/icu/77.1/icudt77l.dat"
+copy_file "$ICU_NX_INSTALL_DIR/share/icu/77.1/LICENSE" "$SDK_STAGE/icu/libnx/share/icu/77.1/LICENSE"
 
 echo "Collecting Mono runtime payload..."
-copy_dir "$MONO_INCLUDE_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/bin/mono/libnx.arm64.Debug/include/mono-2.0"
-copy_dlls "$MONO_DLL_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/bin/mono/libnx.arm64.Debug"
-copy_dlls "$RUNTIME_DLL_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/bin/runtime/net9.0-libnx-Debug-arm64"
-copy_dir "$LINKER_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/bin/Mono.Linker/Debug/net9.0"
-copy_dir "$AOT_CROSS_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/bin/mono/linux.x64.Debug/cross/linux-x64/libnx-arm64"
-copy_static_libs "$NATIVE_LIB_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/bin/native/net9.0-libnx-Debug-arm64"
-copy_static_libs "$MONO_LIB_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/obj/mono/libnx.arm64.Debug/out/lib"
-copy_static_libs "$ZLIB_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/obj/mono/libnx.arm64.Debug/_deps/fetchzlibng-build"
+copy_dir "$MONO_INCLUDE_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/bin/mono/libnx.arm64.${CONFIGURATION}/include/mono-2.0"
+copy_dlls "$MONO_DLL_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/bin/mono/libnx.arm64.${CONFIGURATION}"
+copy_dlls "$RUNTIME_DLL_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/bin/runtime/net9.0-libnx-${CONFIGURATION}-arm64"
+copy_dir "$LINKER_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/bin/Mono.Linker/${CONFIGURATION}/net9.0"
+copy_dir "$AOT_CROSS_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/bin/mono/linux.x64.${CONFIGURATION}/cross/linux-x64/libnx-arm64"
+copy_static_libs "$NATIVE_LIB_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/bin/native/net9.0-libnx-${CONFIGURATION}-arm64"
+copy_static_libs "$MONO_LIB_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/obj/mono/libnx.arm64.${CONFIGURATION}/out/lib"
+copy_static_libs "$ZLIB_DIR" "$SDK_STAGE/dotnet_runtime/artifacts/obj/mono/libnx.arm64.${CONFIGURATION}/_deps/fetchzlibng-build"
 
 echo "Collecting ILLink configuration..."
 for file_name in "${ILLINK_FILES[@]}"; do
     copy_file "$ILLINK_DIR/$file_name" "$SDK_STAGE/dotnet_runtime/src/mono/System.Private.CoreLib/src/ILLink/$file_name"
 done
 
+python3 "$ROOT_DIR/scripts/finish-sdk.py" "$SDK_STAGE"
+
 echo "Creating SDK archive..."
 (
     cd "$SDK_STAGE"
-    zip -r -9 "$SDK_ZIP" icu dotnet_runtime >/dev/null
+    zip -r -9 "$SDK_ZIP" . >/dev/null
 )
 
 echo Done

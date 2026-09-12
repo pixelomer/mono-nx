@@ -1,6 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-set -e
+set -euo pipefail
+CONFIGURATION=${CONFIGURATION:-Release}
+MONO_AOT_LLVM=${MONO_AOT_LLVM:-1}
 
 if ! which dotnet >/dev/null 2>&1; then
     # docker
@@ -18,22 +20,22 @@ if [ -d output ]; then
 fi
 
 echo Building the project...
-dotnet build managed/program.csproj 
+dotnet build managed/program.csproj -c Release
 
 echo Trimming the assemblies...
 
-ILLINK=$MONO_NX_ROOT/artifacts/bin/Mono.Linker/Debug/net9.0/illink.dll
+ILLINK=$MONO_NX_ROOT/artifacts/bin/Mono.Linker/${CONFIGURATION}/net9.0/illink.dll
 ILLINK_CFG=$MONO_NX_ROOT/src/mono/System.Private.CoreLib/src/ILLink/ILLink.Descriptors.xml
 ILLINK_CFG1=$MONO_NX_ROOT/src/mono/System.Private.CoreLib/src/ILLink/ILLink.LinkAttributes.xml
 
-LIB_ROOT=$MONO_NX_ROOT/artifacts/bin/mono/libnx.arm64.Debug/
-FRAMEWORK_ROOT=$MONO_NX_ROOT/artifacts/bin/runtime/net9.0-libnx-Debug-arm64/
+LIB_ROOT=$MONO_NX_ROOT/artifacts/bin/mono/libnx.arm64.${CONFIGURATION}/
+FRAMEWORK_ROOT=$MONO_NX_ROOT/artifacts/bin/runtime/net9.0-libnx-${CONFIGURATION}-arm64/
 
-dotnet $ILLINK -x $ILLINK_CFG -x $ILLINK_CFG1 --feature System.Resources.UseSystemResourceKeys true -d $LIB_ROOT -d $FRAMEWORK_ROOT --trim-mode link -a managed/bin/Debug/net9.0/program.dll
+dotnet $ILLINK -x $ILLINK_CFG -x $ILLINK_CFG1 --feature System.Resources.UseSystemResourceKeys true -d $LIB_ROOT -d $FRAMEWORK_ROOT --trim-mode link -a managed/bin/Release/net9.0/program.dll
 
 echo Mono AOT build...
 
-MONO_COMPILER=$MONO_NX_ROOT/artifacts/bin/mono/linux.x64.Debug/cross/linux-x64/libnx-arm64/mono-aot-cross
+MONO_COMPILER=$MONO_NX_ROOT/artifacts/bin/mono/linux.x64.${CONFIGURATION}/cross/linux-x64/libnx-arm64/mono-aot-cross
 
 export PATH=$PATH:$DEVKITPRO/devkitA64/bin/
 
@@ -42,7 +44,13 @@ echo "build log" > mono_aot.log
 for file in output/*.dll; do
     # Note that direct-pinvoke removes the need for dlshim most of the time but it can cause linking errors if managed code contains pinvoke methods that are not present in our build (even if at runtime they are not used).
     # In that case remove direct-pinvoke and reenable dlshim in the makefile
-    $MONO_COMPILER --path=output/ --aot=full,static,direct-icalls,direct-pinvoke,tool-prefix=aarch64-none-elf- $file >> mono_aot.log
+    options=full,static,direct-icalls,direct-pinvoke,tool-prefix=aarch64-none-elf-
+    llvm=()
+    if [[ "$MONO_AOT_LLVM" == 1 ]]; then
+        llvm=(--llvm)
+        options+=,llvm-outfile="$file.llvm.o",llvm-path="${MONO_COMPILER%/*}/"
+    fi
+    "$MONO_COMPILER" "${llvm[@]}" --path=output/ --aot="$options" "$file" >> mono_aot.log
 done
 
 echo copying outputs

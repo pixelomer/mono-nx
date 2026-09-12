@@ -1,27 +1,8 @@
-#!/bin/bash
-set -e
-
-echo test 
-
-# Build dotnet and deps
-source env.sh 
-cd icu && ./build_icu.sh
-cd ..
-./build_mono.sh
-
-# Prepare sdk release
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+python3 build.py --aot-example "$@"
+source env.sh
 ./gather_sdk.sh
-
-# Build mono-nx demos
-cd managed
-./managed_build.sh
-
-cd ../native/interpreter
-make -j4
-
-cd ../aot
-./build_aot.sh
-make -j4
-
-cd ../..
+(cd managed && ./managed_build.sh)
 ./copy_sd_files.sh

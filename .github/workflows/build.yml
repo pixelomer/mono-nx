@@ -10,8 +10,6 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag monobuild
-    - name: Clone dotnet_runtime fork
-      run: git clone --depth=1 -b libnx https://github.com/exelix11/dotnet_runtime.git
     - name: Build via docker
       run: docker run --rm --entrypoint /bin/bash -v $(pwd):/mono-nx monobuild ./github_actions_build.sh
     - name: Upload SDK artifact

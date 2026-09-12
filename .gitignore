@@ -25,3 +25,6 @@ bin/
 
 !native/aot/managed/guess_number.exe
 native/aot/source/mono_symbols.h
+
+__pycache__/
+*.pyc

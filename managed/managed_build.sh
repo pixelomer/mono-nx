@@ -13,6 +13,6 @@ if ! which dotnet >/dev/null 2>&1; then
     fi
 fi
 
-dotnet build pad_input/pad_input.csproj
-dotnet build example/example.csproj
-dotnet build explorer_demo/explorer_demo.csproj
+dotnet build pad_input/pad_input.csproj -c Release
+dotnet build example/example.csproj -c Release
+dotnet build explorer_demo/explorer_demo.csproj -c Release

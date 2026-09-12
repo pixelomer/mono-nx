@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-: "${MONO_LLVM_RUNTIME_ROOT:?Set runtime source root}"
 here=$(cd "$(dirname "$0")" && pwd)
+MONO_LLVM_RUNTIME_ROOT=${MONO_LLVM_RUNTIME_ROOT:-${MONO_NX_ROOT:-$here/../../dotnet_runtime}}
 out="$here/../../artifacts/tls-cleanup-host"
 mkdir -p "$out"
 python3 - "$MONO_LLVM_RUNTIME_ROOT" "$out" <<'PY'

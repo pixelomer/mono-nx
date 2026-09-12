@@ -1,0 +1,6 @@
+{
+  "revision": "53a63db1e7ea8bf965024a17f949494fc55db9c6",
+  "flavor": "mono",
+  "llvm": true,
+  "url": "https://github.com/pixelomer/dotnet-runtime.git"
+}

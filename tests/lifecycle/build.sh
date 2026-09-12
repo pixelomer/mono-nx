@@ -1,17 +1,15 @@
 #!/usr/bin/env bash
-# Build a lifecycle probe with the rel3 managed/native BCL and a separately
-# built Mono LLVM runtime/compiler; source inputs are documented in README.md.
+# Build a generic lifecycle probe using this checkout's matching Release SDK.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../.." && pwd)
-: "${MONO_SDK_ROOT:?Set MONO_SDK_ROOT to a compatible rel3 SDK checkout}"
-: "${MONO_LLVM_RUNTIME_ROOT:?Set MONO_LLVM_RUNTIME_ROOT to the rebuilt runtime fork}"
+if [[ -z "${MONO_NX_ROOT:-}" ]]; then source "$root/env.sh"; fi
 : "${DEVKITPRO:?Set DEVKITPRO}"
-export MONO_NX_ROOT="$MONO_SDK_ROOT/dotnet_runtime"
-export ICU_NX_INSTALL_DIR="$MONO_SDK_ROOT/icu/libnx"
+: "${ICU_NX_INSTALL_DIR:?Set ICU_NX_INSTALL_DIR}"
+export CONFIGURATION=${CONFIGURATION:-Release}
 export PATH="$DEVKITPRO/devkitA64/bin:$PATH"
-compiler="$MONO_LLVM_RUNTIME_ROOT/artifacts/bin/mono/linux.x64.Release/cross/linux-x64/libnx-arm64/mono-aot-cross"
-target="$MONO_LLVM_RUNTIME_ROOT/artifacts/obj/mono/libnx.arm64.Release"
+compiler="$MONO_NX_ROOT/artifacts/bin/mono/linux.x64.${CONFIGURATION}/cross/linux-x64/libnx-arm64/mono-aot-cross"
+target="$MONO_NX_ROOT/artifacts/obj/mono/libnx.arm64.${CONFIGURATION}"
 out="$root/artifacts/lifecycle-llvm"
 mkdir -p "$out"/{source,romfs,logs}
 dotnet build "$here/Lifecycle.csproj" -c Release > "$out/logs/managed.log" 2>&1
@@ -24,7 +22,7 @@ root,out,target=map(Path,sys.argv[1:])
 s=(root/'native/aot/Makefile').read_text()
 s=s.replace('aot_example','mono-llvm-lifecycle')
 s=s.replace('../shared',os.path.relpath(root/'native/shared',out))
-s=s.replace('$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.Debug',str(target))
+s=s.replace('$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.$(CONFIGURATION)',str(target))
 s=s.replace('$(OUTPUT).elf\t:\t$(OFILES)', '$(OUTPUT).elf\t:\t$(OFILES) $(AOT_FILES) $(TOPDIR)/Makefile')
 (out/'Makefile').write_text(s)
 s=(root/'native/aot/romfs/aot_config.ini').read_text().replace('/program.dll','/MonoLifecycle.dll')
@@ -33,11 +31,11 @@ s=s.replace(';force_full_application = true','force_full_application = true')
 PY
 cd "$out"
 cfg="$MONO_NX_ROOT/src/mono/System.Private.CoreLib/src/ILLink"
-dotnet "$MONO_NX_ROOT/artifacts/bin/Mono.Linker/Debug/net9.0/illink.dll" \
+dotnet "$MONO_NX_ROOT/artifacts/bin/Mono.Linker/${CONFIGURATION}/net9.0/illink.dll" \
  -x "$cfg/ILLink.Descriptors.xml" -x "$cfg/ILLink.LinkAttributes.xml" \
  --feature System.Resources.UseSystemResourceKeys true \
- -d "$MONO_NX_ROOT/artifacts/bin/mono/libnx.arm64.Debug" \
- -d "$MONO_NX_ROOT/artifacts/bin/runtime/net9.0-libnx-Debug-arm64" \
+ -d "$MONO_NX_ROOT/artifacts/bin/mono/libnx.arm64.${CONFIGURATION}" \
+ -d "$MONO_NX_ROOT/artifacts/bin/runtime/net9.0-libnx-${CONFIGURATION}-arm64" \
  -d "$here/bin/Release/net9.0" --trim-mode link \
  -a "$here/bin/Release/net9.0/MonoLifecycle.dll" all > logs/linker.log 2>&1
 "$compiler" --version > logs/compiler-version.txt

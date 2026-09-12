@@ -1,3 +1,4 @@
+CONFIGURATION ?= Release
 #---------------------------------------------------------------------------------
 .SUFFIXES:
 #---------------------------------------------------------------------------------
@@ -45,10 +46,10 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   of a homebrew executable (.nro). This is intended to be used for sysmodules.
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
-MONO_NX_USE_CIMGUI 			:=  	1
-MONO_NX_USE_SDL2 			:=  	1
-MONO_NX_USE_OPENGL	 		:=  	0
-MONO_NX_USE_OPENAL	 		:=  	0
+MONO_NX_USE_CIMGUI 			:=	1
+MONO_NX_USE_SDL2 			:=	1
+MONO_NX_USE_OPENGL	 		:=	0
+MONO_NX_USE_OPENAL	 		:=	0
 
 TARGET		:=	mono_nx
 BUILD		:=	build
@@ -71,9 +72,9 @@ CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 			$(ARCH) $(DEFINES)
 
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__ \
-			-I$(MONO_NX_ROOT)/artifacts/bin/mono/libnx.arm64.Debug/include/mono-2.0 \
+			-I$(MONO_NX_ROOT)/artifacts/bin/mono/libnx.arm64.$(CONFIGURATION)/include/mono-2.0 \
 			-I$(ICU_NX_INSTALL_DIR)/include \
-			-I/opt/devkitpro/portlibs/switch/include/SDL2/ \
+			-I$(DEVKITPRO)/portlibs/switch/include/SDL2/ \
 			-DIMGUI_USER_CONFIG=\"../cimconfig.h\" \
 			-DIMGUI_IMPL_API="extern \"C\" " \
 			-DU_DISABLE_RENAMING=1
@@ -84,19 +85,19 @@ ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 LIBS	:=  \
-			$(MONO_NX_ROOT)/artifacts/bin/native/net9.0-libnx-Debug-arm64/libSystem.IO.Compression.Native.a \
-  			$(MONO_NX_ROOT)/artifacts/bin/native/net9.0-libnx-Debug-arm64/libSystem.Globalization.Native.a \
-			$(MONO_NX_ROOT)/artifacts/bin/native/net9.0-libnx-Debug-arm64/libSystem.Native.a \
+			$(MONO_NX_ROOT)/artifacts/bin/native/net9.0-libnx-$(CONFIGURATION)-arm64/libSystem.IO.Compression.Native.a \
+			$(MONO_NX_ROOT)/artifacts/bin/native/net9.0-libnx-$(CONFIGURATION)-arm64/libSystem.Globalization.Native.a \
+			$(MONO_NX_ROOT)/artifacts/bin/native/net9.0-libnx-$(CONFIGURATION)-arm64/libSystem.Native.a \
 			$(ICU_NX_INSTALL_DIR)/lib/libicui18n.a \
 			$(ICU_NX_INSTALL_DIR)/lib/libicuuc.a \
 			$(ICU_NX_INSTALL_DIR)/lib/libicudata.a \
-			$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.Debug/out/lib/libmonosgen-2.0.a \
-			$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.Debug/out/lib/libmono-component-debugger-static.a \
-			$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.Debug/out/lib/libmono-component-diagnostics_tracing-stub-static.a \
-			$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.Debug/out/lib/libmono-component-hot_reload-stub-static.a \
-			$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.Debug/out/lib/libmono-component-marshal-ilgen-static.a \
-			$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.Debug/_deps/fetchzlibng-build/libz.a \
-			-pthread 
+			$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.$(CONFIGURATION)/out/lib/libmonosgen-2.0.a \
+			$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.$(CONFIGURATION)/out/lib/libmono-component-debugger-static.a \
+			$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.$(CONFIGURATION)/out/lib/libmono-component-diagnostics_tracing-stub-static.a \
+			$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.$(CONFIGURATION)/out/lib/libmono-component-hot_reload-stub-static.a \
+			$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.$(CONFIGURATION)/out/lib/libmono-component-marshal-ilgen-static.a \
+			$(MONO_NX_ROOT)/artifacts/obj/mono/libnx.arm64.$(CONFIGURATION)/_deps/fetchzlibng-build/libz.a \
+			-pthread
 
 # Other libs like -lnx are added at the end due to the order of linking
 

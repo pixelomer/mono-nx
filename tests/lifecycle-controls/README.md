@@ -19,13 +19,13 @@ growth is an association, not a unique allocation owner. Allocator used bytes
 are not reserved address space, allocation traffic or RSS.
 The separate native BCL detached callback API is outside this workload.
 
-Use the source inputs and prerequisites in the
-[lifecycle build guide](../lifecycle/README.md), including the public rel-3
-Debug SDK layout and separate Release LLVM runtime/compiler:
+Use the [root source-build guide](../../README.md#build) to obtain the matching
+Release runtime, framework, IL linker and LLVM compiler. The lifecycle helper
+also requires Python, ripgrep and a .NET 9 SDK on PATH.
 
 ```sh
-MONO_SDK_ROOT="$(pwd)/artifacts/rel3-sdk" \
-MONO_LLVM_RUNTIME_ROOT="$(pwd)/dotnet_runtime" \
+python3 build.py
+source env.sh
 bash tests/lifecycle-controls/build.sh
 ```
 
