@@ -68,6 +68,21 @@ writes sdk-env.sh; paths must not contain whitespace. Build applications from a
 matching mono-nx source checkout with that environment. Do not source the source
 checkout's env.sh over a configured packaged-SDK environment.
 
+## Install the demos
+
+Preserve existing SD files and configuration before extracting `sd_files.zip`
+into the SD root: merging its `mono`, `switch` and `config` directories can
+replace files with the same names. It includes the Homebrew Menu `.dll`/`.exe` file
+association, which launches `/mono/mono_nx.nro` with the selected assembly.
+Use the Homebrew Menu in full application mode. The `switch` directory contains
+controller, API and GUI demos; `aot_example.nro` is the standalone AOT example.
+
+Build your own .NET 9 program using the `managed/` examples and copy its DLLs to
+`switch/` for the interpreter. Logging and runtime settings are described in
+[config.ini](sd_files/mono/config.ini). Additional native imports need a custom
+launcher build and registration in `native/shared`; see the
+[original AOT notes](notes/aot.md) and [LLVM notes](notes/LLVM.md).
+
 ## Programs and integration
 
 The `managed/` examples are ordinary .NET 9 assemblies. The interpreter loads

@@ -1,3 +1,7 @@
+> For the current source-pinned Release/LLVM build, follow [the README](../README.md)
+> and source `env.sh` after building. The original notes below explain AOT's
+> registration, metadata and interoperability model.
+
 # Building the mono AOT compiler
 
 To build AOT homebrew you will first need to build all the mono static libraries and the cross compiler on your machine.
